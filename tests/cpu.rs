@@ -166,26 +166,38 @@ fn should_get_linux_process_stats_with_cpus() {
     let before = now_ms() as u64;
     let spork = Spork::new().unwrap();
 
-    sleep_ms!(wait);
-    // kick the cpu a bit
-    fib(35);
+    let len = 1024*1024*10;
+    let mut bytes = Vec::with_capacity(len);
 
-    let stats = match spork.stats_with_cpus(StatType::Process, Some(spork.num_cores())) {
-        Ok(s) => s,
-        Err(e) => panic!("Stats error {:?}", e),
-    };
-    let _final = now_ms() as u64;
+    for i in 0..len {
+        bytes.push(0_u8);
+    }
 
-    println!("{:?}", stats);
-    assert!(stats.cpu > expected_cpu);
-    assert!(stats.memory > 0);
-    assert!(stats.duration >= wait);
-    assert!(stats.duration <= _final - before);
-    assert_eq!(stats.cores, spork.num_cores());
-    assert_eq!(stats.kind, StatType::Process);
-    assert!(stats.uptime >= wait);
-    assert!(stats.uptime <= _final - before);
-    assert!(stats.polled <= _final as i64);
+    for _ in 0..10000000 {
+        sleep_ms!(wait);
+        // kick the cpu a bit
+        fib(35);
+
+        let stats = match spork.stats_with_cpus(StatType::Process, Some(spork.num_cores())) {
+            Ok(s) => s,
+            Err(e) => panic!("Stats error {:?}", e),
+        };
+        let _final = now_ms() as u64;
+
+        println!("{:?}", stats);
+
+        bytes = Vec::new();
+    }
+
+//    assert!(stats.cpu > expected_cpu);
+//    assert!(stats.memory > 0);
+//    assert!(stats.duration >= wait);
+//    assert!(stats.duration <= _final - before);
+//    assert_eq!(stats.cores, spork.num_cores());
+//    assert_eq!(stats.kind, StatType::Process);
+//    assert!(stats.uptime >= wait);
+//    assert!(stats.uptime <= _final - before);
+//    assert!(stats.polled <= _final as i64);
 }
 
 #[test]

@@ -4,6 +4,9 @@ use libc::{CLOCK_THREAD_CPUTIME_ID, EFAULT, EINVAL, EPERM, RUSAGE_CHILDREN, RUSA
 use libc::timespec;
 use libc::timeval;
 use libc::rusage;
+use std::fs::File;
+use std::path::Path;
+use std::io::{BufReader, BufRead};
 
 use super::*;
 
@@ -110,6 +113,28 @@ pub fn get_cpu_time(val: &rusage) -> f64 {
     };
 
     (times.sec as f64) + (times.usec as f64 / 1000000_f64)
+}
+
+pub fn get_pss() -> u64 {
+    let pid = unsafe { libc::getpid() };
+    let path = Path::new("/proc").join(&format!("{}", pid)).join("smaps");
+    if let Ok(f) = File::open(path) {
+        let reader = BufReader::new(f);
+        let pss = reader.lines()
+            .filter_map(|l| l.ok())
+            .filter_map(|l| {
+                if !l.starts_with("Pss:") {
+                    return None;
+                }
+                let l = l.replace("Pss:", "");
+                let l = l.replace("kB", "");
+                let l = l.replace(" ", "");
+                l.parse::<u64>().ok()
+            }).sum();
+        return pss;
+    }
+
+    0
 }
 
 // -----------------------------------------
