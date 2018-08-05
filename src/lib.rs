@@ -301,7 +301,7 @@ impl Spork {
             duration: duration,
             cpu_time: cpu_time,
             cpu: cpu_percent,
-            memory: (usage.ru_maxrss as u64) * 1000,
+            memory: posix::get_pss(),
             uptime: utils::safe_unsigned_sub(now, self.started),
             cores: 1,
         };
@@ -387,7 +387,7 @@ impl Spork {
             duration: duration,
             cpu_time: cpu_time,
             cpu: cpu_percent,
-            memory: (usage.ru_maxrss as u64) * 1000,
+            memory: posix::get_pss(),
             uptime: utils::safe_unsigned_sub(now, self.started),
             cores: cores,
         };
