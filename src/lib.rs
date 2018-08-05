@@ -334,7 +334,7 @@ impl Spork {
             duration: duration,
             cpu_time: cpu_time,
             cpu: cpu_percent,
-            memory: (usage.ru_maxrss as u64) * 1000,
+            memory: darwin::get_rss(),
             uptime: utils::safe_unsigned_sub(now, self.started),
             cores: 1,
         };
@@ -440,7 +440,7 @@ impl Spork {
             duration: duration,
             cpu_time: cpu_time,
             cpu: cpu_percent,
-            memory: (usage.ru_maxrss as u64) * 1000,
+            memory: darwin::get_rss(),
             uptime: utils::safe_unsigned_sub(now, self.started),
             cores: cores,
         };
@@ -475,7 +475,7 @@ impl Spork {
             duration: duration,
             cpu_time: cpu_time,
             cpu: cpu_percent,
-            memory: (mem.PeakWorkingSetSize as u64) / 1024,
+            memory: (mem.WorkingSetSize as u64) / 1024,
             uptime: utils::safe_unsigned_sub(now, self.started),
             cores: 1,
         };
@@ -529,7 +529,7 @@ impl Spork {
             duration: duration,
             cpu_time: cpu_time,
             cpu: cpu_percent,
-            memory: (mem.PeakWorkingSetSize as u64) / 1024,
+            memory: (mem.WorkingSetSize as u64) / 1024,
             uptime: utils::safe_unsigned_sub(now, self.started),
             cores: cores,
         };

@@ -1,3 +1,5 @@
+mod ffi;
+
 use mach::task_info::{task_basic_info, task_basic_info_t, task_events_info, task_events_info_t,
                       task_thread_times_info, task_thread_times_info_t, MIG_ARRAY_TOO_LARGE, TASK_BASIC_INFO,
                       TASK_BASIC_INFO_COUNT, TASK_EVENTS_INFO, TASK_EVENTS_INFO_COUNT, TASK_THREAD_TIMES_INFO,
@@ -12,6 +14,7 @@ use libc::{EFAULT, EINVAL, EPERM, RUSAGE_CHILDREN, RUSAGE_SELF};
 use libc::timespec;
 use libc::timeval;
 use libc::rusage;
+use libc::c_void;
 
 use super::*;
 
@@ -181,6 +184,23 @@ pub fn get_cpu_time(val: &rusage) -> f64 {
     };
 
     (times.sec as f64) + (times.usec as f64 / 1000000_f64)
+}
+
+pub fn get_rss() -> u64 {
+    let taskinfo_size = ::std::mem::size_of::<libc::proc_taskinfo>() as i32;
+    unsafe {
+        let mut task_info = ::std::mem::zeroed::<libc::proc_taskinfo>();
+        let pid = libc::getpid();
+        if ffi::proc_pidinfo(pid,
+                             libc::PROC_PIDTASKINFO,
+                             0,
+                             &mut task_info as *mut libc::proc_taskinfo as *mut c_void,
+                             taskinfo_size) != taskinfo_size {
+            return 0;
+        }
+
+        task_info.pti_resident_size >> 10
+    }
 }
 
 // -----------------------------------------
