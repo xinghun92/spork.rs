@@ -1,8 +1,6 @@
-mod ffi;
-
-use mach::task_info::{task_basic_info, task_basic_info_t, task_events_info, task_events_info_t,
+use mach::task_info::{task_basic_info, task_basic_info_t,
                       task_thread_times_info, task_thread_times_info_t, MIG_ARRAY_TOO_LARGE, TASK_BASIC_INFO,
-                      TASK_BASIC_INFO_COUNT, TASK_EVENTS_INFO, TASK_EVENTS_INFO_COUNT, TASK_THREAD_TIMES_INFO,
+                      TASK_BASIC_INFO_COUNT, TASK_THREAD_TIMES_INFO,
                       TASK_THREAD_TIMES_INFO_COUNT};
 use mach::task::task_info;
 use mach::kern_return::{KERN_INVALID_ARGUMENT, KERN_SUCCESS};
@@ -14,12 +12,16 @@ use libc::{EFAULT, EINVAL, EPERM, RUSAGE_CHILDREN, RUSAGE_SELF};
 use libc::timespec;
 use libc::timeval;
 use libc::rusage;
-use libc::c_void;
+use libc::{c_void, c_int};
 
 use super::*;
 
-use utils;
 use utils::CpuTime;
+
+extern "C" {
+    pub fn proc_pidinfo(pid: c_int, flavor: c_int, arg: u64, buffer: *mut c_void,
+                        buffersize: c_int) -> c_int;
+}
 
 fn empty_rusage() -> rusage {
     libc::rusage {
@@ -191,11 +193,11 @@ pub fn get_rss() -> u64 {
     unsafe {
         let mut task_info = ::std::mem::zeroed::<libc::proc_taskinfo>();
         let pid = libc::getpid();
-        if ffi::proc_pidinfo(pid,
-                             libc::PROC_PIDTASKINFO,
-                             0,
-                             &mut task_info as *mut libc::proc_taskinfo as *mut c_void,
-                             taskinfo_size) != taskinfo_size {
+        if proc_pidinfo(pid,
+                        libc::PROC_PIDTASKINFO,
+                        0,
+                        &mut task_info as *mut libc::proc_taskinfo as *mut c_void,
+                        taskinfo_size) != taskinfo_size {
             return 0;
         }
 
